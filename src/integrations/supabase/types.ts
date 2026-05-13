@@ -14,7 +14,335 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      customers: {
+        Row: {
+          address: string | null
+          created_at: string
+          dues: number
+          id: string
+          last_visit: string | null
+          name: string
+          phone: string | null
+          total_purchases: number
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          dues?: number
+          id?: string
+          last_visit?: string | null
+          name: string
+          phone?: string | null
+          total_purchases?: number
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          dues?: number
+          id?: string
+          last_visit?: string | null
+          name?: string
+          phone?: string | null
+          total_purchases?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          receipt_url: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          category: string
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          receipt_url?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          receipt_url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      invoice_items: {
+        Row: {
+          amount: number
+          gst: number
+          id: string
+          invoice_id: string
+          name: string
+          product_id: string | null
+          qty: number
+          rate: number
+        }
+        Insert: {
+          amount?: number
+          gst?: number
+          id?: string
+          invoice_id: string
+          name: string
+          product_id?: string | null
+          qty?: number
+          rate?: number
+        }
+        Update: {
+          amount?: number
+          gst?: number
+          id?: string
+          invoice_id?: string
+          name?: string
+          product_id?: string | null
+          qty?: number
+          rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          cgst: number
+          created_at: string
+          customer_id: string | null
+          customer_name: string
+          customer_phone: string | null
+          date: string
+          id: string
+          notes: string | null
+          number: string
+          payment_mode: string
+          sgst: number
+          status: string
+          subtotal: number
+          total: number
+          user_id: string
+        }
+        Insert: {
+          cgst?: number
+          created_at?: string
+          customer_id?: string | null
+          customer_name: string
+          customer_phone?: string | null
+          date?: string
+          id?: string
+          notes?: string | null
+          number: string
+          payment_mode?: string
+          sgst?: number
+          status?: string
+          subtotal?: number
+          total?: number
+          user_id: string
+        }
+        Update: {
+          cgst?: number
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string
+          customer_phone?: string | null
+          date?: string
+          id?: string
+          notes?: string | null
+          number?: string
+          payment_mode?: string
+          sgst?: number
+          status?: string
+          subtotal?: number
+          total?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category: string | null
+          created_at: string
+          gst: number
+          id: string
+          name: string
+          purchase_price: number
+          qty: number
+          selling_price: number
+          threshold: number
+          unit: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          gst?: number
+          id?: string
+          name: string
+          purchase_price?: number
+          qty?: number
+          selling_price?: number
+          threshold?: number
+          unit?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          gst?: number
+          id?: string
+          name?: string
+          purchase_price?: number
+          qty?: number
+          selling_price?: number
+          threshold?: number
+          unit?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          created_at: string
+          full_name: string | null
+          gstin: string | null
+          id: string
+          logo_url: string | null
+          phone: string | null
+          shop_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          full_name?: string | null
+          gstin?: string | null
+          id: string
+          logo_url?: string | null
+          phone?: string | null
+          shop_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          full_name?: string | null
+          gstin?: string | null
+          id?: string
+          logo_url?: string | null
+          phone?: string | null
+          shop_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      settings: {
+        Row: {
+          currency: string
+          gst_default: number
+          invoice_prefix: string
+          lang: string
+          low_stock_default: number
+          payment_terms: string | null
+          theme: string
+          updated_at: string
+          user_id: string
+          whatsapp_alerts: boolean
+        }
+        Insert: {
+          currency?: string
+          gst_default?: number
+          invoice_prefix?: string
+          lang?: string
+          low_stock_default?: number
+          payment_terms?: string | null
+          theme?: string
+          updated_at?: string
+          user_id: string
+          whatsapp_alerts?: boolean
+        }
+        Update: {
+          currency?: string
+          gst_default?: number
+          invoice_prefix?: string
+          lang?: string
+          low_stock_default?: number
+          payment_terms?: string | null
+          theme?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp_alerts?: boolean
+        }
+        Relationships: []
+      }
+      suppliers: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
