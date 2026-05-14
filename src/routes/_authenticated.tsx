@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { Sidebar } from "@/components/shopos/Sidebar";
 import { Navbar } from "@/components/shopos/Navbar";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeSync } from "@/lib/realtime";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthLayout() {
+  useRealtimeSync();
   return (
     <div className="flex min-h-screen bg-background">
       <div className="hidden lg:block">

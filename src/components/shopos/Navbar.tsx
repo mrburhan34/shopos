@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { Menu, Moon, Sun, Search, Bell, Languages } from "lucide-react";
+import { Menu, Moon, Sun, Languages } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Sidebar } from "./Sidebar";
 import { getTheme, toggleTheme } from "@/lib/theme";
-import { getLang, setLang, useLang, t } from "@/lib/i18n";
+import { getLang, setLang, useLang } from "@/lib/i18n";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
@@ -30,15 +29,8 @@ export function Navbar() {
         </SheetContent>
       </Sheet>
 
-      <div className="relative hidden flex-1 max-w-md md:block">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder={t("search")} className="pl-9 h-9 bg-secondary border-transparent" />
-      </div>
-      <div className="flex-1 md:hidden" />
+      <div className="flex-1" />
 
-      <Button variant="ghost" size="icon" className="md:hidden" aria-label="Search">
-        <Search className="size-5" />
-      </Button>
       <Button
         variant="ghost"
         size="icon"
@@ -49,9 +41,6 @@ export function Navbar() {
         }}
       >
         <Languages className="size-5" />
-      </Button>
-      <Button variant="ghost" size="icon" aria-label="Notifications">
-        <Bell className="size-5" />
       </Button>
       <Button
         variant="ghost"
