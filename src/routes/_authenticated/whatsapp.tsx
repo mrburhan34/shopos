@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PageHeader, EmptyState } from "@/components/shopos/Bits";
+import { PageHeader } from "@/components/shopos/Bits";
 import { MessageCircle, CheckCircle2, Send } from "lucide-react";
 import { inr } from "@/lib/format";
 import { toast } from "sonner";
