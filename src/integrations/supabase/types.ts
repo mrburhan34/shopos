@@ -142,6 +142,7 @@ export type Database = {
           id: string
           notes: string | null
           number: string
+          paid_amount: number
           payment_mode: string
           sgst: number
           status: string
@@ -159,6 +160,7 @@ export type Database = {
           id?: string
           notes?: string | null
           number: string
+          paid_amount?: number
           payment_mode?: string
           sgst?: number
           status?: string
@@ -176,6 +178,7 @@ export type Database = {
           id?: string
           notes?: string | null
           number?: string
+          paid_amount?: number
           payment_mode?: string
           sgst?: number
           status?: string
@@ -340,6 +343,42 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_config: {
+        Row: {
+          created_at: string
+          id: string
+          phone: string | null
+          twilio_account_sid: string | null
+          twilio_auth_token: string | null
+          twilio_sender: string | null
+          updated_at: string
+          user_id: string
+          webhook_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          phone?: string | null
+          twilio_account_sid?: string | null
+          twilio_auth_token?: string | null
+          twilio_sender?: string | null
+          updated_at?: string
+          user_id: string
+          webhook_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          phone?: string | null
+          twilio_account_sid?: string | null
+          twilio_auth_token?: string | null
+          twilio_sender?: string | null
+          updated_at?: string
+          user_id?: string
+          webhook_url?: string | null
         }
         Relationships: []
       }

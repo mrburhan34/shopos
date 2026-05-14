@@ -1,132 +1,100 @@
-# ShopOS — Build Plan
+# ShopOS — 18 Surgical Improvements + Partial Payments
 
-AI-powered shop management web app for small businesses in Andhra Pradesh. Built on TanStack Start + React 19 + Tailwind v4, with **Lovable Cloud** for database + auth, **real Google OAuth**, and fully responsive layouts (desktop, tablet, mobile).
+All data continues to flow through Supabase. The "shared data layer" requirement is met by centralizing reads in React Query and invalidating affected query keys after every mutation, so every mounted tab refetches automatically. Real Supabase auth on Register; Outlook stays removed.
 
-## Stack & key decisions
+## Section 1 — Navigation & Layout
+1. **Remove notification bell** in `Navbar.tsx` (button + import).
+2. **Remove global search** from navbar (desktop input + mobile search icon).
+3. **Invoice tab search** — controlled `<Input>` at top of `invoices.tsx` filtering by `number` (case-insensitive `includes`).
 
-- **Lovable Cloud** for backend (Postgres + Auth + RLS) — enabled before any code is written
-- **Auth**: Email/Password + **real Google OAuth** only. No Outlook button anywhere.
-- `lucide-react`, `recharts`, `sonner`, `react-hook-form` + `zod`
-- CSS tokens in `src/styles.css` matching spec (indigo `#4F46E5`, bg `#FAFAF8`/`#111110`, cards `#FFFFFF`/`#1A1A18`, borders `#E5E5E0`/`#2A2A28`, flat, no gradients)
-- Inter font via Google Fonts
-- Dark mode toggle on `<html>`, persisted to `localStorage`
-- Language toggle EN / తెలుగు via `src/lib/i18n.ts`
-- Fully responsive: sidebar → Sheet drawer below `md`; tables → stacked cards on mobile; navbar search collapses to icon; min 44px tap targets
+## Section 2 — Auth
+4. **Fix Register** (`register.tsx`):
+   - Fields: full name, shop name, email, phone, password, confirm password.
+   - Zod validation with inline errors (email format, phone exactly 10 digits, password ≥ 6, passwords match, no empty fields).
+   - Real `supabase.auth.signUp` with `data: { full_name, shop_name, phone }` (existing trigger creates profile/settings).
+   - Success toast "Account created! Welcome to ShopOS 🎉"; auto-redirect to `/dashboard` if session returned, else `/login` with info toast.
+   - Google button uses real `lovable.auth.signInWithOAuth("google")`. No Outlook.
 
-## Database schema (Supabase migrations)
+## Section 3 — Invoices
+5. **Customer combobox** — replace free-text customer field with `Command`/`Popover` searchable list of `customers` (filter by name or phone). Selecting autofills phone + address. Typing a new name allowed; created on submit.
+6. **Item combobox with autofill** — line-item name becomes searchable list of `products`. Selecting autofills `rate`, `gst`, unit. Qty defaults 1; amount = qty × rate; GST + line total live. Custom names still allowed.
+7. **Shop header on invoice** — `InvoicePreview` reads `profiles` (shop_name, address, phone, gstin) and renders above customer details. Fallback: "Set your shop details in Settings."
+8. **Auto inventory deduction** — after invoice insert, decrement `products.qty` for each matched item. Toast low-stock warning when new qty ≤ threshold; allow negative with warning. Invalidate `["products","dashboard","analytics"]`.
 
-```text
-profiles          (id=auth.uid, full_name, shop_name, phone, address, gstin, logo_url)
-products          (id, user_id, name, category, qty, unit, purchase_price, selling_price, gst, threshold)
-customers         (id, user_id, name, phone, address, total_purchases, dues, last_visit)
-suppliers         (id, user_id, name, phone, address, notes)
-invoices          (id, user_id, number, customer_name, customer_phone, customer_id (nullable),
-                   date, subtotal, cgst, sgst, total, payment_mode, status, notes)
-invoice_items     (id, invoice_id, product_id, name, qty, rate, gst, amount)
-expenses          (id, user_id, category, amount, date, notes, receipt_url)
-settings          (user_id PK, lang, theme, currency, low_stock_default, gst_default,
-                   invoice_prefix, payment_terms, whatsapp_alerts)
+### NEW — Partial payments
+- Status `Partial` already exists. When the user picks `Partial` (or `Unpaid`) the form reveals an **Amount paid** input (`paid_amount`) with auto-computed **Balance due** = `total − paid_amount` (read-only, red).
+  - `Paid` → `paid_amount = total`, due = 0.
+  - `Unpaid` → `paid_amount = 0`, due = total.
+  - `Partial` → user enters amount; validation: `0 < paid_amount < total`, otherwise auto-flip status to Paid/Unpaid.
+- Schema: add `paid_amount numeric not null default 0` to `invoices` (a generated `due_amount` is computed in the UI from `total − paid_amount`).
+- **Record payment** action on existing invoices (row menu + preview): dialog to add an additional payment; updates `paid_amount`, recomputes status (Paid when `paid_amount ≥ total`, else Partial).
+- Invoice list shows due amount as a sub-line under total when status ≠ Paid; status badge already color-codes Partial.
+- Invoice preview/print shows **Paid** and **Balance due** lines in the totals block.
+- Customers `dues` aggregate uses `total − paid_amount` (see [10]).
+- Ledger gets a "Collected (in range)" card based on `sum(paid_amount)` and an "Outstanding (in range)" based on `sum(total − paid_amount)`.
+
+## Section 4 — Customers
+9. **Remove Dashboard search** — confirm Dashboard has none (no-op if absent).
+10. **Auto-sync customers from invoices** — on invoice save, look up customer by lowercased name (or phone). Insert if missing; otherwise update `total_purchases += total` and `dues += (total − paid_amount)`. Set `invoices.customer_id`. Invalidate `["customers"]`. Same logic runs on Record-payment to decrement dues.
+
+## Section 5 — Analytics
+11. **Profit Overview** — two rows of metric cards (Month / Year): Revenue, Expenses, Net Profit (green ≥0, red <0). Combined `ComposedChart`: bars=monthly revenue, line=monthly expenses, last 12 months.
+12. **Most Ordered Items** — replace "Avg order" card with top-10 list aggregated from `invoice_items` by qty: rank, name, total qty, total revenue.
+13. **Improved Top Products** — horizontal `BarChart` (top 10 by revenue) with revenue label at bar end; toggle to sort by units sold; show units + invoice count.
+
+## Section 6 — Sales Ledger
+14. **Fix date range** — keep `gte/lte` (already inclusive); ensure invoice `date` saved as `yyyy-MM-dd`. Columns: Date, INV #, Customer, Items summary, Subtotal, GST, Grand Total, Paid, Due, Payment, Status. Summary cards recompute on filter: Total Revenue, Collected, Outstanding, Net (Revenue − Expenses in range), Transaction count.
+
+## Section 7 — Expenses
+15. **Rebuild expenses tab**:
+   - Summary: This month, This year, Largest category, Entry count.
+   - Category filter pills: All, Rent, Electricity, Purchase, Salary, Other.
+   - Sortable table (Date, Amount) with color-coded badge, notes, amount.
+   - Inline/modal Add Expense form (date default today, category dropdown, amount, notes).
+   - Donut chart of current-month spend by category.
+   - Edit + Delete actions (delete behind confirm dialog).
+
+## Section 8 — WhatsApp Bot
+16. Rebuild as setup + dashboard page using a new `whatsapp_config` table (user_id unique, phone, twilio_account_sid, twilio_auth_token, twilio_sender, webhook_url):
+   - **Setup panel** (no row): inputs (Auth Token masked) + numbered Twilio sandbox steps + placeholder webhook URL.
+   - **After setup**: green "Connected · {number}" badge; commands reference table (`sales today`, `low stock`, `pending dues`, `top product`, `profit this month`); "Test Bot" simulates the response from Supabase data; Make.com / n8n hookup notes.
+   - No real Twilio call this iteration.
+
+## Section 9 — Ecosystem & Polish
+17. **Shared reactive layer** — `src/lib/queries.ts` with query-key constants + `invalidate(...)` helper; `useRealtimeSync()` hook subscribes to Postgres changes for `invoices`, `invoice_items`, `products`, `customers`, `expenses`, `profiles` and invalidates matching keys. Mounted in `_authenticated.tsx`. Dashboard footer shows "Last updated HH:mm".
+18. **Final polish**:
+   - `EmptyState` on every empty table.
+   - Success toast on every save; confirm `AlertDialog` on every destructive action.
+   - `inr()` retains lakh formatting (`en-IN`); set `maximumFractionDigits: 2` for partial amounts.
+   - `fmtDate` outputs `DD MMM YYYY`.
+   - Audit hardcoded colors → tokens / `dark:` variants.
+   - Mobile: tables in `overflow-x-auto`; verify Sidebar Sheet.
+   - Consistent `PageHeader` (title left, action right).
+
+## Migrations
+
+```sql
+-- Partial payments
+alter table public.invoices add column paid_amount numeric not null default 0;
+update public.invoices set paid_amount = total where status = 'Paid';
+
+-- WhatsApp config
+create table public.whatsapp_config (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique,
+  phone text, twilio_account_sid text, twilio_auth_token text,
+  twilio_sender text, webhook_url text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.whatsapp_config enable row level security;
+create policy whatsapp_config_all_own on public.whatsapp_config
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 ```
-
-- RLS on every table: `user_id = auth.uid()` for all CRUD
-- DB trigger `handle_new_user()` → creates `profiles` + `settings` on signup
-- Storage bucket `receipts` (private) for expense receipts and shop logos
-
-## Routing (TanStack file-based)
-
-```text
-src/routes/
-  __root.tsx                  Inter font, theme bootstrap, Sonner, QueryClient
-  login.tsx                   email + Google only
-  register.tsx                email + Google only
-  reset-password.tsx
-  _authenticated.tsx          beforeLoad guard
-  _authenticated/index.tsx    Dashboard
-  _authenticated/invoices.tsx
-  _authenticated/invoices.new.tsx
-  _authenticated/customers.tsx
-  _authenticated/products.tsx
-  _authenticated/suppliers.tsx
-  _authenticated/ledger.tsx
-  _authenticated/expenses.tsx
-  _authenticated/analytics.tsx
-  _authenticated/ai.tsx
-  _authenticated/whatsapp.tsx
-  _authenticated/settings.tsx
-```
-
-Data via `createServerFn` + `requireSupabaseAuth` middleware; mutations via `useServerFn` + React Query.
-
-## Login / Register
-
-Split layout — left indigo panel (logo, Telugu tagline, 4 feature bullets, Anantapur footer); right form. Buttons:
-- **Continue with Google** (real Supabase Google OAuth)
-- Email + password (sign in / sign up)
-- Forgot password link
-
-No Outlook / Microsoft button anywhere.
-
-## Invoice form (key change)
-
-The "New Invoice" form will use a **plain text input** for customer name — no dropdown / no customer selector. Fields:
-
-- **Customer name** — free-text `<Input>` (required)
-- **Customer phone** — free-text `<Input>` (optional)
-- **Date** — date picker, defaults to today
-- **Line items** — repeating rows: item name, qty, rate, GST%, auto-calculated amount
-- **Auto totals** — subtotal, CGST/SGST split, grand total
-- **Payment mode** — Cash / UPI / Card / Credit
-- **Status** — Paid / Unpaid / Partial
-- **Notes** — textarea
-- Actions: Save Draft, Generate Invoice, Print (styled HTML print view → `window.print()` for "PDF")
-
-On save, the invoice is stored with `customer_name` + `customer_phone` directly. If a customer with the same phone already exists in the user's customer list, we link `customer_id` automatically (silent — user never sees a picker). If not, we optionally create a new customer row in the background so totals/dues still aggregate on the Customers page. (Tell me if you'd rather skip the auto-create and keep invoices fully decoupled from the Customers table.)
-
-## Pages
-
-1. **Dashboard** — greeting + date + city, 4 metric cards, Recent Activity, Top Products bar chart, AI insight banner
-2. **Invoices** — list + filters + status badges; New Invoice as above; printable preview
-3. **Customers** — card grid, search + filters, side panel with purchase history (still useful even though invoice form is free-text)
-4. **Products** — low-stock strip, table, add/edit modal, stock adjustment dialog with reason
-5. **Sales Ledger** — date range, summary cards, transaction table, CSV export
-6. **Expenses** — add form (with receipt upload to Storage), filterable table, monthly donut
-7. **Analytics** — recharts: 30-day revenue line, top-10 bar, payment-method pie, customer acquisition; KPI cards
-8. **AI Insights** — chat UI; quick prompts; intent matcher in `src/lib/ai.ts` reads user data via server fns; answers in EN or Telugu
-9. **WhatsApp Bot** — informational page with mock chat preview (real send out of scope)
-10. **Settings** — Shop profile, Appearance, Notifications, Invoice settings, Data export/import JSON, Subscription (display)
-
-## Shared components (`src/components/shopos/`)
-
-`Sidebar`, `Navbar`, `MetricCard`, `StatusBadge`, `EmptyState`, `PageHeader`, `ThemeToggle`, `LangToggle`, `InvoiceForm` (free-text customer), `InvoicePreview`, `ProductForm`, `CustomerForm`, `ExpenseForm`, `AIChat`, `MobileNav` (Sheet).
-
-## Responsive behavior
-
-- `≥ lg`: sidebar 220px + content
-- `md`–`lg`: collapsible icon sidebar
-- `< md`: hamburger → Sheet; tables → stacked cards; metric cards 2-col → 1-col; navbar search → search icon opening a sheet
-- Bottom safe-area padding on mobile
-
-## Cross-cutting
-
-- `sonner` toasts for all CRUD
-- `react-hook-form` + `zod` validation with inline errors
-- Loading skeletons + empty states with CTA buttons
-- All UI text routed through `t(key)` for EN/Telugu
-
-## Build order
-
-1. Enable Lovable Cloud, create migrations + RLS + signup trigger + storage bucket
-2. Theme tokens + Inter font + dark mode + Sonner in `__root.tsx`
-3. i18n dictionary
-4. Login / Register / Reset (email/password + Google OAuth)
-5. `_authenticated` guard + responsive Sidebar + Navbar
-6. Dashboard
-7. Products → Customers → Invoices (free-text customer) → Ledger → Expenses
-8. Analytics → AI Insights → Settings → WhatsApp page
-9. Mobile polish + empty/loading states pass
 
 ## Out of scope
+- Real Twilio sending (UI + config storage only).
+- Real PDF library (continue styled `window.print()`).
 
-- Outlook / Microsoft OAuth (removed per your request)
-- Real WhatsApp message sending
-- Real PDF library — invoice "PDF" is styled print view via `window.print()`
+## Build order
+Migration → shared queries/realtime hook → Navbar (1,2) → Register (4) → Invoice form (5,6,7,8,partial) + tab search (3) → Customer sync (10) → Ledger (14) → Analytics (11,12,13) → Expenses (15) → WhatsApp (16) → Polish (17,18).
