@@ -316,6 +316,45 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          activated_at: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          payment_ref: string | null
+          status: string
+          trial_days: number
+          trial_start_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          payment_ref?: string | null
+          status?: string
+          trial_days?: number
+          trial_start_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activated_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          payment_ref?: string | null
+          status?: string
+          trial_days?: number
+          trial_start_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       suppliers: {
         Row: {
           address: string | null

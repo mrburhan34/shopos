@@ -41,12 +41,16 @@ import {
   FileText,
   Trash2,
   Printer,
+  Download,
   Search,
   Wallet,
   ChevronsUpDown,
 } from "lucide-react";
 import { inr, fmtDate } from "@/lib/format";
 import { toast } from "sonner";
+import { parseISO } from "date-fns";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export const Route = createFileRoute("/_authenticated/invoices")({
   component: Invoices,
@@ -67,6 +71,8 @@ function Invoices() {
   const [payOpen, setPayOpen] = useState<any>(null);
   const [delId, setDelId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const { data: invs, isLoading } = useQuery({
     queryKey: ["invoices"],
@@ -100,12 +106,35 @@ function Invoices() {
     },
   });
 
-  const filtered = (invs ?? []).filter((i: any) =>
-    !search.trim()
+  const filtered = (invs ?? []).filter((i: any) => {
+    const matchesSearch = !search.trim()
       ? true
       : (i.number ?? "").toLowerCase().includes(search.toLowerCase()) ||
-        (i.customer_name ?? "").toLowerCase().includes(search.toLowerCase())
-  );
+        (i.customer_name ?? "").toLowerCase().includes(search.toLowerCase());
+    if (!matchesSearch) return false;
+    if (dateFrom || dateTo) {
+      const inv = parseISO(i.date).getTime();
+      if (dateFrom) {
+        const start = parseISO(dateFrom); start.setHours(0, 0, 0, 0);
+        if (inv < start.getTime()) return false;
+      }
+      if (dateTo) {
+        const end = parseISO(dateTo); end.setHours(23, 59, 59, 999);
+        if (inv > end.getTime()) return false;
+      }
+    }
+    return true;
+  });
+
+  const downloadInvoicePDF = async (invoiceNumber: string) => {
+    const el = document.getElementById("invoice-print-area");
+    if (!el) return;
+    const canvas = await html2canvas(el, { backgroundColor: "#ffffff", scale: 2 });
+    const img = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
+    pdf.addImage(img, "PNG", 0, 0, canvas.width, canvas.height);
+    pdf.save(`${invoiceNumber}.pdf`);
+  };
 
   return (
     <div>
@@ -137,14 +166,27 @@ function Invoices() {
         }
       />
 
-      <div className="mb-4 relative max-w-sm">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Search by INV number or customer…"
-          className="pl-9"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <div className="relative max-w-sm flex-1 min-w-[200px]">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search by INV number or customer…"
+            className="pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground">From</label>
+          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground">To</label>
+          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+        </div>
+        {(dateFrom || dateTo) && (
+          <Button variant="ghost" size="sm" onClick={() => { setDateFrom(""); setDateTo(""); }}>Clear</Button>
+        )}
       </div>
 
       {isLoading ? (
@@ -303,11 +345,11 @@ function Invoices() {
       )}
 
       <Dialog open={!!printOpen} onOpenChange={(o) => !o && setPrintOpen(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[480px] sm:max-w-[480px] p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Invoice {printOpen?.number}</DialogTitle>
           </DialogHeader>
-          {printOpen && <InvoicePreview inv={printOpen} profile={profile} />}
+          {printOpen && <InvoicePreview inv={printOpen} profile={profile} onDownload={downloadInvoicePDF} />}
         </DialogContent>
       </Dialog>
 
@@ -981,11 +1023,21 @@ function RecordPaymentForm({
   );
 }
 
-function InvoicePreview({ inv, profile }: { inv: any; profile: any }) {
+function InvoicePreview({ inv, profile, onDownload }: { inv: any; profile: any; onDownload: (n: string) => void }) {
   const due = Math.max(0, Number(inv.total) - Number(inv.paid_amount ?? 0));
   return (
     <div>
-      <div className="rounded-lg border bg-white p-6 text-black print:border-0">
+      <div
+        id="invoice-print-area"
+        style={{
+          background: "#ffffff",
+          color: "#1a1a18",
+          padding: "32px",
+          maxWidth: "480px",
+          margin: "0 auto",
+          fontFamily: "sans-serif",
+        }}
+      >
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-xl font-bold">Tax Invoice</h2>
@@ -1076,9 +1128,12 @@ function InvoicePreview({ inv, profile }: { inv: any; profile: any }) {
           </div>
         )}
       </div>
-      <div className="mt-3 flex justify-end no-print">
+      <div className="mt-3 flex justify-end gap-2 no-print">
+        <Button variant="outline" onClick={() => onDownload(inv.number)}>
+          <Download className="size-4 mr-1" /> Download PDF
+        </Button>
         <Button onClick={() => window.print()}>
-          <Printer className="size-4 mr-1" /> Print / PDF
+          <Printer className="size-4 mr-1" /> Print
         </Button>
       </div>
     </div>
