@@ -39,11 +39,48 @@ function SettingsPage() {
     <div>
       <PageHeader title="Settings" subtitle="Shop profile, appearance, and more" />
       <Tabs defaultValue="shop" className="max-w-3xl">
-        <TabsList><TabsTrigger value="shop">Shop</TabsTrigger><TabsTrigger value="appearance">Appearance</TabsTrigger><TabsTrigger value="invoice">Invoice</TabsTrigger></TabsList>
+        <TabsList>
+          <TabsTrigger value="shop">Shop</TabsTrigger>
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          <TabsTrigger value="invoice">Invoice</TabsTrigger>
+          <TabsTrigger value="subscription">Subscription</TabsTrigger>
+        </TabsList>
         <TabsContent value="shop"><ShopForm profile={profile} onSaved={() => qc.invalidateQueries({ queryKey: ["profile"] })} /></TabsContent>
         <TabsContent value="appearance"><Appearance /></TabsContent>
         <TabsContent value="invoice"><InvoiceSettings settings={settings} onSaved={() => qc.invalidateQueries({ queryKey: ["settings"] })} /></TabsContent>
+        <TabsContent value="subscription"><SubscriptionPanel /></TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function SubscriptionPanel() {
+  const { data: sub } = useSubscription();
+  if (!sub) return <div className="mt-4 rounded-lg border bg-card p-4 text-sm text-muted-foreground">Loading…</div>;
+  const status = sub.status;
+  const badge =
+    status === "trial"
+      ? <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">Trial · {daysLeft(sub)} days remaining</span>
+      : status === "active"
+      ? <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">Active</span>
+      : <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-800">Expired</span>;
+  const cta =
+    status === "trial" ? "Subscribe now" : status === "active" ? "Renew" : "Resubscribe";
+  return (
+    <div className="mt-4 space-y-3 rounded-lg border bg-card p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <Label>Status</Label>
+          <div className="mt-1">{badge}</div>
+        </div>
+        <Link to="/subscribe"><Button>{cta}</Button></Link>
+      </div>
+      {status === "active" && sub.expires_at && (
+        <div className="text-sm text-muted-foreground">Valid until: {new Date(sub.expires_at).toLocaleDateString("en-IN")}</div>
+      )}
+      {sub.payment_ref && (
+        <div className="text-xs text-muted-foreground">Payment ref: {sub.payment_ref}</div>
+      )}
     </div>
   );
 }
