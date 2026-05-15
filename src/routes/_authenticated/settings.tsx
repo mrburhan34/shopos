@@ -10,6 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shopos/Bits";
 import { toast } from "sonner";
 import { getTheme, setTheme } from "@/lib/theme";
+import { Link } from "@tanstack/react-router";
+import { useSubscription } from "@/hooks/use-subscription";
+import { daysLeft } from "@/lib/subscription";
 
 export const Route = createFileRoute("/_authenticated/settings")({ component: SettingsPage });
 
