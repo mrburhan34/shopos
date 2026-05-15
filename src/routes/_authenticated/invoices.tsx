@@ -106,12 +106,35 @@ function Invoices() {
     },
   });
 
-  const filtered = (invs ?? []).filter((i: any) =>
-    !search.trim()
+  const filtered = (invs ?? []).filter((i: any) => {
+    const matchesSearch = !search.trim()
       ? true
       : (i.number ?? "").toLowerCase().includes(search.toLowerCase()) ||
-        (i.customer_name ?? "").toLowerCase().includes(search.toLowerCase())
-  );
+        (i.customer_name ?? "").toLowerCase().includes(search.toLowerCase());
+    if (!matchesSearch) return false;
+    if (dateFrom || dateTo) {
+      const inv = parseISO(i.date).getTime();
+      if (dateFrom) {
+        const start = parseISO(dateFrom); start.setHours(0, 0, 0, 0);
+        if (inv < start.getTime()) return false;
+      }
+      if (dateTo) {
+        const end = parseISO(dateTo); end.setHours(23, 59, 59, 999);
+        if (inv > end.getTime()) return false;
+      }
+    }
+    return true;
+  });
+
+  const downloadInvoicePDF = async (invoiceNumber: string) => {
+    const el = document.getElementById("invoice-print-area");
+    if (!el) return;
+    const canvas = await html2canvas(el, { backgroundColor: "#ffffff", scale: 2 });
+    const img = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
+    pdf.addImage(img, "PNG", 0, 0, canvas.width, canvas.height);
+    pdf.save(`${invoiceNumber}.pdf`);
+  };
 
   return (
     <div>
