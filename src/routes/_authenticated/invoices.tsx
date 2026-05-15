@@ -1128,9 +1128,12 @@ function InvoicePreview({ inv, profile, onDownload }: { inv: any; profile: any; 
           </div>
         )}
       </div>
-      <div className="mt-3 flex justify-end no-print">
+      <div className="mt-3 flex justify-end gap-2 no-print">
+        <Button variant="outline" onClick={() => onDownload(inv.number)}>
+          <Download className="size-4 mr-1" /> Download PDF
+        </Button>
         <Button onClick={() => window.print()}>
-          <Printer className="size-4 mr-1" /> Print / PDF
+          <Printer className="size-4 mr-1" /> Print
         </Button>
       </div>
     </div>
