@@ -349,7 +349,7 @@ function Invoices() {
           <DialogHeader>
             <DialogTitle>Invoice {printOpen?.number}</DialogTitle>
           </DialogHeader>
-          {printOpen && <InvoicePreview inv={printOpen} profile={profile} />}
+          {printOpen && <InvoicePreview inv={printOpen} profile={profile} onDownload={downloadInvoicePDF} />}
         </DialogContent>
       </Dialog>
 
