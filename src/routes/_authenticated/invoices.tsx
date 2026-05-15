@@ -345,7 +345,7 @@ function Invoices() {
       )}
 
       <Dialog open={!!printOpen} onOpenChange={(o) => !o && setPrintOpen(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[480px] sm:max-w-[480px] p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Invoice {printOpen?.number}</DialogTitle>
           </DialogHeader>
