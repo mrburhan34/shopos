@@ -71,6 +71,8 @@ function Invoices() {
   const [payOpen, setPayOpen] = useState<any>(null);
   const [delId, setDelId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const { data: invs, isLoading } = useQuery({
     queryKey: ["invoices"],
