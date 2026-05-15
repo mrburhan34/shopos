@@ -1023,11 +1023,21 @@ function RecordPaymentForm({
   );
 }
 
-function InvoicePreview({ inv, profile }: { inv: any; profile: any }) {
+function InvoicePreview({ inv, profile, onDownload }: { inv: any; profile: any; onDownload: (n: string) => void }) {
   const due = Math.max(0, Number(inv.total) - Number(inv.paid_amount ?? 0));
   return (
     <div>
-      <div className="rounded-lg border bg-white p-6 text-black print:border-0">
+      <div
+        id="invoice-print-area"
+        style={{
+          background: "#ffffff",
+          color: "#1a1a18",
+          padding: "32px",
+          maxWidth: "480px",
+          margin: "0 auto",
+          fontFamily: "sans-serif",
+        }}
+      >
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-xl font-bold">Tax Invoice</h2>
