@@ -41,12 +41,16 @@ import {
   FileText,
   Trash2,
   Printer,
+  Download,
   Search,
   Wallet,
   ChevronsUpDown,
 } from "lucide-react";
 import { inr, fmtDate } from "@/lib/format";
 import { toast } from "sonner";
+import { parseISO } from "date-fns";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export const Route = createFileRoute("/_authenticated/invoices")({
   component: Invoices,
