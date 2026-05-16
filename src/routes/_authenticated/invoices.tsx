@@ -41,7 +41,6 @@ import {
   FileText,
   Trash2,
   Printer,
-  Download,
   Search,
   Wallet,
   ChevronsUpDown,
@@ -49,8 +48,6 @@ import {
 import { inr, fmtDate } from "@/lib/format";
 import { toast } from "sonner";
 import { parseISO } from "date-fns";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
 export const Route = createFileRoute("/_authenticated/invoices")({
   component: Invoices,
@@ -126,15 +123,8 @@ function Invoices() {
     return true;
   });
 
-  const downloadInvoicePDF = async (invoiceNumber: string) => {
-    const el = document.getElementById("invoice-print-area");
-    if (!el) return;
-    const canvas = await html2canvas(el, { backgroundColor: "#ffffff", scale: 2 });
-    const img = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
-    pdf.addImage(img, "PNG", 0, 0, canvas.width, canvas.height);
-    pdf.save(`${invoiceNumber}.pdf`);
-  };
+
+
 
   return (
     <div>
@@ -349,7 +339,7 @@ function Invoices() {
           <DialogHeader>
             <DialogTitle>Invoice {printOpen?.number}</DialogTitle>
           </DialogHeader>
-          {printOpen && <InvoicePreview inv={printOpen} profile={profile} onDownload={downloadInvoicePDF} />}
+          {printOpen && <InvoicePreview inv={printOpen} profile={profile} />}
         </DialogContent>
       </Dialog>
 
@@ -1023,7 +1013,7 @@ function RecordPaymentForm({
   );
 }
 
-function InvoicePreview({ inv, profile, onDownload }: { inv: any; profile: any; onDownload: (n: string) => void }) {
+function InvoicePreview({ inv, profile }: { inv: any; profile: any }) {
   const due = Math.max(0, Number(inv.total) - Number(inv.paid_amount ?? 0));
   return (
     <div>
@@ -1129,9 +1119,6 @@ function InvoicePreview({ inv, profile, onDownload }: { inv: any; profile: any; 
         )}
       </div>
       <div className="mt-3 flex justify-end gap-2 no-print">
-        <Button variant="outline" onClick={() => onDownload(inv.number)}>
-          <Download className="size-4 mr-1" /> Download PDF
-        </Button>
         <Button onClick={() => window.print()}>
           <Printer className="size-4 mr-1" /> Print
         </Button>
@@ -1139,3 +1126,4 @@ function InvoicePreview({ inv, profile, onDownload }: { inv: any; profile: any; 
     </div>
   );
 }
+

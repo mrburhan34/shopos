@@ -19,6 +19,7 @@ import {
 import { inr } from "@/lib/format";
 import { TrendingUp, ShoppingBag, Package, IndianRupee, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { buildProductCostMap, computeGrossProfit } from "@/lib/profit";
 
 export const Route = createFileRoute("/_authenticated/analytics")({ component: Analytics });
 
@@ -37,15 +38,18 @@ function Analytics() {
       monthStart.setDate(1);
       const yearStart = new Date(new Date().getFullYear(), 0, 1);
 
-      const [invs, exps, items] = await Promise.all([
-        supabase.from("invoices").select("date,total,paid_amount").gte("date", cutoff),
+      const [invs, exps, items, prods] = await Promise.all([
+        supabase.from("invoices").select("id,date,total,paid_amount,status").gte("date", cutoff),
         supabase.from("expenses").select("date,amount").gte("date", cutoff),
-        supabase.from("invoice_items").select("name,qty,amount,invoice_id,invoices!inner(date,user_id)"),
+        supabase.from("invoice_items").select("name,qty,rate,amount,product_id,invoice_id,invoices!inner(date,status,user_id)"),
+        supabase.from("products").select("id,name,purchase_price"),
       ]);
 
       const invD = invs.data ?? [];
       const expD = exps.data ?? [];
       const itemD = (items.data ?? []) as any[];
+      const prodD = (prods.data ?? []) as any[];
+      const costMap = buildProductCostMap(prodD);
 
       const monthRev = invD
         .filter((i) => new Date(i.date) >= monthStart)
@@ -59,6 +63,16 @@ function Analytics() {
       const yearExp = expD
         .filter((e) => new Date(e.date) >= yearStart)
         .reduce((s, e) => s + Number(e.amount), 0);
+
+      // Gross profit (paid invoices only) for month & year
+      const paidItemsInRange = (since: Date) =>
+        itemD.filter((it) => {
+          const inv = it.invoices;
+          if (!inv || inv.status !== "Paid") return false;
+          return new Date(inv.date) >= since;
+        });
+      const monthProfit = computeGrossProfit(paidItemsInRange(monthStart), costMap);
+      const yearProfit = computeGrossProfit(paidItemsInRange(yearStart), costMap);
 
       // Last 12 months series
       const months: { key: string; label: string; rev: number; exp: number }[] = [];
@@ -103,6 +117,8 @@ function Analytics() {
         yearRev,
         monthExp,
         yearExp,
+        monthProfit,
+        yearProfit,
         months,
         mostOrdered,
         topByRev,
@@ -127,10 +143,10 @@ function Analytics() {
         <MetricCard label="Revenue" value={inr(data?.monthRev ?? 0)} icon={IndianRupee} tone="success" />
         <MetricCard label="Expenses" value={inr(data?.monthExp ?? 0)} icon={Receipt} tone="danger" />
         <MetricCard
-          label="Net Profit"
-          value={inr((data?.monthRev ?? 0) - (data?.monthExp ?? 0))}
+          label="Gross Profit (selling − purchase cost)"
+          value={inr(data?.monthProfit ?? 0)}
           icon={TrendingUp}
-          tone={(data?.monthRev ?? 0) - (data?.monthExp ?? 0) >= 0 ? "success" : "danger"}
+          tone={(data?.monthProfit ?? 0) >= 0 ? "success" : "danger"}
         />
       </div>
 
@@ -139,10 +155,10 @@ function Analytics() {
         <MetricCard label="Revenue" value={inr(data?.yearRev ?? 0)} icon={IndianRupee} tone="success" />
         <MetricCard label="Expenses" value={inr(data?.yearExp ?? 0)} icon={Receipt} tone="danger" />
         <MetricCard
-          label="Net Profit"
-          value={inr((data?.yearRev ?? 0) - (data?.yearExp ?? 0))}
+          label="Gross Profit (selling − purchase cost)"
+          value={inr(data?.yearProfit ?? 0)}
           icon={TrendingUp}
-          tone={(data?.yearRev ?? 0) - (data?.yearExp ?? 0) >= 0 ? "success" : "danger"}
+          tone={(data?.yearProfit ?? 0) >= 0 ? "success" : "danger"}
         />
       </div>
 

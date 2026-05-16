@@ -1,9 +1,33 @@
 import { supabase } from "@/integrations/supabase/client";
+import { VALID_CODES } from "@/lib/activation-codes";
 
+export { VALID_CODES };
 export const OWNER_WHATSAPP = "919704209360";
-export const VALID_CODES = ["SHOPOS2025", "ACTIVATE499", "SAQIB001"];
 export const UPI_ID = "syedsaqibburhanuddin@fam";
 export const PRICE = 499;
+
+const USED_CODES_KEY = "shopos_used_codes";
+
+function getUsedCodes(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(USED_CODES_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+function markCodeUsed(code: string) {
+  if (typeof window === "undefined") return;
+  const used = getUsedCodes();
+  if (!used.includes(code)) {
+    used.push(code);
+    window.localStorage.setItem(USED_CODES_KEY, JSON.stringify(used));
+  }
+}
 
 export type SubscriptionStatus = "trial" | "active" | "expired";
 
@@ -75,10 +99,12 @@ export async function fetchAndEvaluateSubscription(): Promise<Subscription | nul
 
 export async function activateWithCode(code: string): Promise<Subscription> {
   const normalized = code.trim().toUpperCase();
-  if (!VALID_CODES.includes(normalized)) throw new Error("Invalid code");
+  if (!VALID_CODES.includes(normalized)) throw new Error("invalid");
+  if (getUsedCodes().includes(normalized)) throw new Error("used");
+
   const { data: u } = await supabase.auth.getUser();
   const userId = u.user?.id;
-  if (!userId) throw new Error("Not signed in");
+  if (!userId) throw new Error("not_signed_in");
   const now = new Date();
   const expires = new Date(now.getTime() + 30 * 86400000);
   const { data, error } = await supabase
@@ -93,6 +119,7 @@ export async function activateWithCode(code: string): Promise<Subscription> {
     .select()
     .single();
   if (error) throw error;
+  markCodeUsed(normalized);
   return data as Subscription;
 }
 
