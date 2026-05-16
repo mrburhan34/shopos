@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { PageHeader, MetricCard, StatusBadge, EmptyState } from "@/components/shopos/Bits";
 import { Download, IndianRupee, FileText, BookOpen, TrendingUp, Receipt } from "lucide-react";
 import { inr, fmtDate } from "@/lib/format";
+import { parseISO } from "date-fns";
+import { buildProductCostMap, computeGrossProfit } from "@/lib/profit";
 
 export const Route = createFileRoute("/_authenticated/ledger")({ component: Ledger });
 
@@ -18,32 +20,57 @@ function Ledger() {
   const { data, isLoading } = useQuery({
     queryKey: ["ledger", from, to],
     queryFn: async () => {
-      const [invs, exps] = await Promise.all([
-        supabase.from("invoices").select("*").gte("date", from).lte("date", to).order("date", { ascending: false }),
-        supabase.from("expenses").select("amount,date").gte("date", from).lte("date", to),
+      const [invs, exps, prods] = await Promise.all([
+        supabase
+          .from("invoices")
+          .select("*, invoice_items(id,name,qty,rate,amount,gst,product_id)")
+          .order("date", { ascending: false }),
+        supabase.from("expenses").select("amount,date"),
+        supabase.from("products").select("id,name,purchase_price"),
       ]);
       if (invs.error) throw invs.error;
-      return { invs: invs.data ?? [], exps: exps.data ?? [] };
+      return {
+        invs: invs.data ?? [],
+        exps: exps.data ?? [],
+        prods: prods.data ?? [],
+      };
     },
   });
 
-  const invs = data?.invs ?? [];
-  const exps = data?.exps ?? [];
-  const total = invs.reduce((s, i) => s + Number(i.total), 0);
-  const collected = invs.reduce((s, i) => s + Number(i.paid_amount ?? 0), 0);
-  const outstanding = invs.reduce((s, i) => s + Math.max(0, Number(i.total) - Number(i.paid_amount ?? 0)), 0);
-  const expensesTotal = exps.reduce((s, e) => s + Number(e.amount), 0);
-  const net = total - expensesTotal;
+  const inRange = (dateStr: string) => {
+    const t = parseISO(dateStr).getTime();
+    const s = parseISO(from); s.setHours(0, 0, 0, 0);
+    const e = parseISO(to); e.setHours(23, 59, 59, 999);
+    return t >= s.getTime() && t <= e.getTime();
+  };
+
+  const invs = (data?.invs ?? []).filter((i: any) => inRange(i.date));
+  const exps = (data?.exps ?? []).filter((e: any) => inRange(e.date));
+  const prods = data?.prods ?? [];
+
+  const total = invs.reduce((s: number, i: any) => s + Number(i.total), 0);
+  const expensesTotal = exps.reduce((s: number, e: any) => s + Number(e.amount), 0);
+
+  // Gross profit from Paid invoices' line items
+  const costMap = buildProductCostMap(prods as any);
+  const paidItems = invs
+    .filter((i: any) => i.status === "Paid")
+    .flatMap((i: any) => (i.invoice_items ?? []) as any[]);
+  const grossProfit = computeGrossProfit(paidItems, costMap);
 
   const exportCsv = () => {
     if (!invs.length) return;
     const rows = [
-      ["Number", "Date", "Customer", "Total", "Paid", "Due", "Status", "Payment"],
-      ...invs.map((i) => [
-        i.number, i.date, i.customer_name, i.total,
-        i.paid_amount ?? 0,
-        Math.max(0, Number(i.total) - Number(i.paid_amount ?? 0)),
-        i.status, i.payment_mode,
+      ["Date", "Number", "Customer", "Amount", "GST", "Grand Total", "Payment", "Status"],
+      ...invs.map((i: any) => [
+        i.date,
+        i.number,
+        i.customer_name,
+        i.subtotal,
+        Number(i.cgst) + Number(i.sgst),
+        i.total,
+        i.payment_mode,
+        i.status,
       ]),
     ];
     const csv = rows.map((r) => r.join(",")).join("\n");
@@ -60,12 +87,11 @@ function Ledger() {
         <div><label className="text-xs text-muted-foreground">From</label><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
         <div><label className="text-xs text-muted-foreground">To</label><Input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>
       </div>
-      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <MetricCard label="Revenue" value={inr(total)} icon={IndianRupee} tone="success" />
-        <MetricCard label="Collected" value={inr(collected)} icon={FileText} />
-        <MetricCard label="Outstanding" value={inr(outstanding)} icon={BookOpen} tone="warning" />
-        <MetricCard label="Expenses" value={inr(expensesTotal)} icon={Receipt} tone="danger" />
-        <MetricCard label="Net" value={inr(net)} icon={TrendingUp} tone={net >= 0 ? "success" : "danger"} hint={`${invs.length} invoices`} />
+      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard label="Total Revenue" value={inr(total)} icon={IndianRupee} tone="success" />
+        <MetricCard label="Total Expenses" value={inr(expensesTotal)} icon={Receipt} tone="danger" />
+        <MetricCard label="Gross Profit" value={inr(grossProfit)} icon={TrendingUp} tone={grossProfit >= 0 ? "success" : "danger"} hint="selling − purchase cost" />
+        <MetricCard label="Transactions" value={invs.length} icon={FileText} />
       </div>
       {isLoading ? <div className="rounded-lg border bg-card p-6 text-sm text-muted-foreground">Loading…</div> :
         invs.length === 0 ? <EmptyState icon={BookOpen} title="No transactions in range" /> :
@@ -74,29 +100,27 @@ function Ledger() {
             <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
               <tr>
                 <th className="px-3 py-2 text-left">Date</th>
-                <th className="px-3 py-2 text-left">Number</th>
+                <th className="px-3 py-2 text-left">INV number</th>
                 <th className="px-3 py-2 text-left">Customer</th>
-                <th className="px-3 py-2 text-center">Mode</th>
-                <th className="px-3 py-2 text-right">Total</th>
-                <th className="px-3 py-2 text-right">Paid</th>
-                <th className="px-3 py-2 text-right">Due</th>
+                <th className="px-3 py-2 text-right">Amount</th>
+                <th className="px-3 py-2 text-right">GST</th>
+                <th className="px-3 py-2 text-right">Grand Total</th>
+                <th className="px-3 py-2 text-center">Payment</th>
                 <th className="px-3 py-2 text-center">Status</th>
               </tr>
             </thead>
             <tbody>
-              {invs.map((i) => {
-                const due = Math.max(0, Number(i.total) - Number(i.paid_amount ?? 0));
+              {invs.map((i: any) => {
+                const gst = Number(i.cgst) + Number(i.sgst);
                 return (
                   <tr key={i.id} className="border-t">
                     <td className="px-3 py-2 text-muted-foreground">{fmtDate(i.date)}</td>
                     <td className="px-3 py-2 font-medium">{i.number}</td>
                     <td className="px-3 py-2">{i.customer_name}</td>
-                    <td className="px-3 py-2 text-center text-muted-foreground">{i.payment_mode}</td>
+                    <td className="px-3 py-2 text-right">{inr(Number(i.subtotal))}</td>
+                    <td className="px-3 py-2 text-right">{inr(gst)}</td>
                     <td className="px-3 py-2 text-right font-semibold">{inr(Number(i.total))}</td>
-                    <td className="px-3 py-2 text-right">{inr(Number(i.paid_amount ?? 0))}</td>
-                    <td className="px-3 py-2 text-right">
-                      {due > 0 ? <span className="text-destructive font-medium">{inr(due)}</span> : <span className="text-muted-foreground">—</span>}
-                    </td>
+                    <td className="px-3 py-2 text-center text-muted-foreground">{i.payment_mode}</td>
                     <td className="px-3 py-2 text-center"><StatusBadge status={i.status} /></td>
                   </tr>
                 );
