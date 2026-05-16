@@ -115,12 +115,14 @@
   body * { visibility: hidden !important; }
   #invoice-print-area, #invoice-print-area * { visibility: visible !important; }
   #invoice-print-area {
-    position: absolute !important;
-    left: 0; top: 0;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
     width: 100% !important;
-    background: #ffffff !important;
+    background: white !important;
+    padding: 40px !important;
+    z-index: 99999 !important;
     box-shadow: none !important;
-    border: 0 !important;
     border-radius: 0 !important;
   }
   .no-print { display: none !important; }

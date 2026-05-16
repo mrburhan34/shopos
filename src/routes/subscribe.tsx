@@ -85,8 +85,12 @@ function SubscribePage() {
       toast.success("Payment verified! Welcome to ShopOS 🎉");
       qc.invalidateQueries({ queryKey: ["subscription"] });
       nav({ to: "/dashboard" });
-    } catch {
-      toast.error("Invalid code. Please contact ShopOS support.");
+    } catch (err: any) {
+      if (err?.message === "used") {
+        toast.error("This code has already been used. Please use a different code.");
+      } else {
+        toast.error("Invalid code. Please contact ShopOS support.");
+      }
     } finally {
       setActivating(false);
     }
