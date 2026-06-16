@@ -25,10 +25,7 @@ function WA() {
   const qc = useQueryClient();
   const { data: cfg } = useQuery({
     queryKey: ["whatsapp_config"],
-    queryFn: async () => {
-      const { data } = await supabase.from("whatsapp_config").select("*").maybeSingle();
-      return data;
-    },
+    queryFn: () => getWhatsappConfig(),
   });
 
   return (
