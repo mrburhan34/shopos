@@ -98,11 +98,11 @@ function WA() {
   );
 }
 
-function SetupCard({ cfg, onSaved }: { cfg: any; onSaved: () => void }) {
+function SetupCard({ cfg, onSaved }: { cfg: WhatsappPublicConfig | null | undefined; onSaved: () => void }) {
   const [f, setF] = useState({
     phone: cfg?.phone ?? "",
     twilio_account_sid: cfg?.twilio_account_sid ?? "",
-    twilio_auth_token: cfg?.twilio_auth_token ?? "",
+    twilio_auth_token: "", // never round-trip the token back to the browser
     twilio_sender: cfg?.twilio_sender ?? "",
     webhook_url: cfg?.webhook_url ?? "",
   });
@@ -111,14 +111,15 @@ function SetupCard({ cfg, onSaved }: { cfg: any; onSaved: () => void }) {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const { data: u } = await supabase.auth.getUser();
-    const userId = u.user!.id;
-    const payload = { ...f, user_id: userId, updated_at: new Date().toISOString() };
-    const { error } = await supabase.from("whatsapp_config").upsert(payload, { onConflict: "user_id" });
-    setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success("Bot configuration saved");
-    onSaved();
+    try {
+      await saveWhatsappConfig({ data: f });
+      toast.success("Bot configuration saved");
+      onSaved();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Failed to save configuration");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -138,6 +139,7 @@ function SetupCard({ cfg, onSaved }: { cfg: any; onSaved: () => void }) {
           type="password"
           value={f.twilio_auth_token}
           onChange={(e) => setF({ ...f, twilio_auth_token: e.target.value })}
+          placeholder={cfg?.has_auth_token ? "•••••••• (leave blank to keep current)" : ""}
         />
       </div>
       <div>
