@@ -48,7 +48,15 @@ export const saveWhatsappConfig = createServerFn({ method: "POST" })
   }) => input ?? {})
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const payload: Record<string, unknown> = {
+    const payload: {
+      user_id: string;
+      phone: string | null;
+      twilio_account_sid: string | null;
+      twilio_sender: string | null;
+      webhook_url: string | null;
+      updated_at: string;
+      twilio_auth_token?: string;
+    } = {
       user_id: context.userId,
       phone: data.phone ?? null,
       twilio_account_sid: data.twilio_account_sid ?? null,
