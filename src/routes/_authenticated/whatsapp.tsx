@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/shopos/Bits";
 import { MessageCircle, CheckCircle2, Send } from "lucide-react";
 import { inr } from "@/lib/format";
 import { toast } from "sonner";
+import { getWhatsappConfig, saveWhatsappConfig, type WhatsappPublicConfig } from "@/lib/whatsapp.functions";
 
 export const Route = createFileRoute("/_authenticated/whatsapp")({ component: WA });
 
