@@ -7,12 +7,13 @@
  * 3. They tap the WhatsApp button which opens chat with owner (OWNER_WHATSAPP)
  *    pre-filled with their email. They paste the UPI transaction reference.
  * 4. Owner verifies the payment manually (PhonePe / GPay txn list).
- * 5. Owner replies on WhatsApp with an activation code (one of VALID_CODES,
- *    edit src/lib/subscription.ts to add new codes).
- * 6. Customer pastes the code on this page → 30 days of access.
+ * 5. Owner replies on WhatsApp with an activation code from the
+ *    server-side `activation_codes` table.
+ * 6. Customer pastes the code on this page → server function validates,
+ *    marks the code used (atomic), and grants 30 days of access.
  * 7. Repeat monthly.
  *
- * To add new activation codes: edit VALID_CODES in src/lib/subscription.ts.
+ * To add new activation codes: INSERT into public.activation_codes (server only).
  */
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
