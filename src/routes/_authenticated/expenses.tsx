@@ -1,3 +1,4 @@
+import { humanizeError } from "@/lib/errors";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
@@ -298,7 +299,7 @@ function ExpenseForm({ initial, onDone }: { initial?: any; onDone: () => void })
       const { error: ue } = await supabase.storage.from("receipts").upload(path, file);
       if (ue) {
         setSaving(false);
-        return toast.error(ue.message);
+        return toast.error(humanizeError(ue));
       }
       receipt_url = path;
     }
@@ -308,7 +309,7 @@ function ExpenseForm({ initial, onDone }: { initial?: any; onDone: () => void })
       const { error } = await supabase.from("expenses").update(payload).eq("id", initial.id);
       if (error) {
         setSaving(false);
-        return toast.error(error.message);
+        return toast.error(humanizeError(error));
       }
       toast.success("Expense updated");
     } else {
@@ -317,7 +318,7 @@ function ExpenseForm({ initial, onDone }: { initial?: any; onDone: () => void })
         .insert({ ...f, user_id: u.user!.id, receipt_url: receipt_url ?? null });
       if (error) {
         setSaving(false);
-        return toast.error(error.message);
+        return toast.error(humanizeError(error));
       }
       toast.success("Expense added");
     }

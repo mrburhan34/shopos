@@ -1,3 +1,4 @@
+import { humanizeError } from "@/lib/errors";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -80,7 +81,7 @@ function CustomerForm({ onDone }: { onDone: () => void }) {
     e.preventDefault();
     const { data: u } = await supabase.auth.getUser();
     const { error } = await supabase.from("customers").insert({ ...f, user_id: u.user!.id });
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(humanizeError(error));
     toast.success("Customer added"); onDone();
   };
   return (

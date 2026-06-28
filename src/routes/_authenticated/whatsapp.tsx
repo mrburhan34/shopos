@@ -1,3 +1,4 @@
+import { humanizeError } from "@/lib/errors";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -116,7 +117,7 @@ function SetupCard({ cfg, onSaved }: { cfg: WhatsappPublicConfig | null | undefi
       toast.success("Bot configuration saved");
       onSaved();
     } catch (err: any) {
-      toast.error(err?.message ?? "Failed to save configuration");
+      toast.error(humanizeError(err, "Failed to save configuration"));
     } finally {
       setSaving(false);
     }

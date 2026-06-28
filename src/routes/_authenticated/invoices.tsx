@@ -1,3 +1,4 @@
+import { humanizeError } from "@/lib/errors";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -519,7 +520,7 @@ function InvoiceForm({ onDone }: { onDone: () => void }) {
       .single();
     if (error) {
       setSaving(false);
-      return toast.error(error.message);
+      return toast.error(humanizeError(error));
     }
 
     const itemsRows = items.map((it) => ({
@@ -958,7 +959,7 @@ function RecordPaymentForm({
       .eq("id", inv.id);
     if (error) {
       setSaving(false);
-      return toast.error(error.message);
+      return toast.error(humanizeError(error));
     }
     if (inv.customer_id) {
       const { data: c } = await supabase

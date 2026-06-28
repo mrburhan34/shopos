@@ -1,3 +1,4 @@
+import { humanizeError } from "@/lib/errors";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -23,13 +24,13 @@ function ResetPage() {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: window.location.origin + "/reset-password",
     });
-    if (error) toast.error(error.message);
+    if (error) toast.error(humanizeError(error));
     else toast.success("Reset link sent. Check your inbox.");
   };
   const updatePwd = async (e: React.FormEvent) => {
     e.preventDefault();
     const { error } = await supabase.auth.updateUser({ password: newPwd });
-    if (error) toast.error(error.message);
+    if (error) toast.error(humanizeError(error));
     else toast.success("Password updated. Sign in.");
   };
 

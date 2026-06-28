@@ -1,3 +1,4 @@
+import { humanizeError } from "@/lib/errors";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -95,7 +96,7 @@ function ShopForm({ profile, onSaved }: { profile: any; onSaved: () => void }) {
     e.preventDefault();
     const { data: u } = await supabase.auth.getUser();
     const { error } = await supabase.from("profiles").update(f).eq("id", u.user!.id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(humanizeError(error));
     toast.success("Saved"); onSaved();
   };
   return (
@@ -135,7 +136,7 @@ function InvoiceSettings({ settings, onSaved }: { settings: any; onSaved: () => 
     e.preventDefault();
     const { data: u } = await supabase.auth.getUser();
     const { error } = await supabase.from("settings").update(f).eq("user_id", u.user!.id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(humanizeError(error));
     toast.success("Saved"); onSaved();
   };
   return (

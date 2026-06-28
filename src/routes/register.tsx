@@ -1,3 +1,4 @@
+import { humanizeError } from "@/lib/errors";
 import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
@@ -73,7 +74,7 @@ function RegisterPage() {
       },
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(humanizeError(error));
     toast.success("Account created! Welcome to ShopOS 🎉");
     if (data.session) nav({ to: "/dashboard" });
     else {
