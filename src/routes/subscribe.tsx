@@ -2,7 +2,7 @@
  * SHOPOS ACTIVATION FLOW (manual UPI payment)
  * ───────────────────────────────────────────
  * 1. Customer's 7-day free trial expires → app routes them here.
- * 2. They scan the FamPay QR (public/upi-qr.png) OR tap the UPI deep link
+ * 2. They tap the UPI deep link
  *    and pay ₹499 to UPI ID: syedsaqibburhanuddin@fam
  * 3. They tap the WhatsApp button which opens chat with owner (OWNER_WHATSAPP)
  *    pre-filled with their email. They paste the UPI transaction reference.
@@ -138,17 +138,7 @@ function SubscribePage() {
           <div className="my-6 h-px bg-border" />
 
           <h2 className="text-sm font-semibold">Step 1 — Pay ₹{PRICE} via UPI</h2>
-          <p className="mt-1 text-xs text-muted-foreground">Scan with any UPI app (PhonePe, GPay, Paytm).</p>
-          <div className="mt-3 flex justify-center">
-            <img
-              src="/upi-qr.png"
-              alt="UPI QR Code"
-              width={220}
-              height={220}
-              loading="lazy"
-              className="rounded-lg border bg-white p-2"
-            />
-          </div>
+          <p className="mt-1 text-xs text-muted-foreground">Use any UPI app (PhonePe, GPay, Paytm) to send exactly ₹{PRICE}.</p>
           <div className="mt-3 flex items-center gap-2">
             <Input value={UPI_ID} readOnly className="text-sm" />
             <Button type="button" variant="outline" size="icon" onClick={copyUpi} aria-label="Copy UPI ID">
