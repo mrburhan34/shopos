@@ -2,7 +2,7 @@
  * SHOPOS ACTIVATION FLOW (manual UPI payment)
  * ───────────────────────────────────────────
  * 1. Customer's 7-day free trial expires → app routes them here.
- * 2. They scan the FamPay QR (public/upi-qr.png) OR tap the UPI deep link
+ * 2. They tap the UPI deep link
  *    and pay ₹499 to UPI ID: syedsaqibburhanuddin@fam
  * 3. They tap the WhatsApp button which opens chat with owner (OWNER_WHATSAPP)
  *    pre-filled with their email. They paste the UPI transaction reference.
