@@ -8,7 +8,20 @@ import { inr } from "@/lib/format";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { buildProductCostMap, computeGrossProfit } from "@/lib/profit";
 
-export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
+export const Route = createFileRoute("/_authenticated/dashboard")({
+  head: () => ({
+    meta: [
+      { title: "Dashboard — ShopOS" },
+      { name: "description", content: "Your ShopOS dashboard: today's sales, outstanding dues, top products, and shop performance at a glance." },
+      { property: "og:title", content: "Dashboard — ShopOS" },
+      { property: "og:description", content: "Your ShopOS dashboard: today's sales, outstanding dues, top products, and shop performance at a glance." },
+      { property: "og:url", content: "https://shopos.lovable.app/dashboard" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://shopos.lovable.app/dashboard" }],
+  }),
+  component: Dashboard,
+});
 
 function Dashboard() {
   const { user } = useAuth();

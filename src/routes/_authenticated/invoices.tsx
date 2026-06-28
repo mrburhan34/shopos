@@ -51,6 +51,17 @@ import { toast } from "sonner";
 import { parseISO } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/invoices")({
+  head: () => ({
+    meta: [
+      { title: "Invoices — ShopOS" },
+      { name: "description", content: "Create, search, and share GST-compliant invoices. Track partial payments and outstanding balances in ShopOS." },
+      { property: "og:title", content: "Invoices — ShopOS" },
+      { property: "og:description", content: "Create, search, and share GST-compliant invoices. Track partial payments and outstanding balances in ShopOS." },
+      { property: "og:url", content: "https://shopos.lovable.app/invoices" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://shopos.lovable.app/invoices" }],
+  }),
   component: Invoices,
 });
 
