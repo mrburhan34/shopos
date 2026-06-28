@@ -12,7 +12,20 @@ import { Plus, Package, AlertTriangle, Trash2, Pencil } from "lucide-react";
 import { inr } from "@/lib/format";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/products")({ component: Products });
+export const Route = createFileRoute("/_authenticated/products")({
+  head: () => ({
+    meta: [
+      { title: "Products — ShopOS" },
+      { name: "description", content: "Manage your product catalogue, pricing, GST rates, and low-stock alerts in ShopOS." },
+      { property: "og:title", content: "Products — ShopOS" },
+      { property: "og:description", content: "Manage your product catalogue, pricing, GST rates, and low-stock alerts in ShopOS." },
+      { property: "og:url", content: "https://shopos.lovable.app/products" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://shopos.lovable.app/products" }],
+  }),
+  component: Products,
+});
 
 function Products() {
   const qc = useQueryClient();

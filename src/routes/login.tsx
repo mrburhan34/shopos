@@ -14,6 +14,18 @@ export const Route = createFileRoute("/login")({
     const { data } = await supabase.auth.getSession();
     if (data.session) throw redirect({ to: "/dashboard" });
   },
+  head: () => ({
+    meta: [
+      { title: "Sign in — ShopOS" },
+      { name: "description", content: "Sign in to ShopOS to manage GST invoices, inventory, customers, and WhatsApp billing for your shop." },
+      { property: "og:title", content: "Sign in — ShopOS" },
+      { property: "og:description", content: "Sign in to ShopOS to manage GST invoices, inventory, customers, and WhatsApp billing for your shop." },
+      { property: "og:url", content: "https://shopos.lovable.app/login" },
+      { name: "twitter:title", content: "Sign in — ShopOS" },
+      { name: "twitter:description", content: "Sign in to ShopOS to manage GST invoices, inventory, customers, and WhatsApp billing for your shop." },
+    ],
+    links: [{ rel: "canonical", href: "https://shopos.lovable.app/login" }],
+  }),
   component: LoginPage,
 });
 
@@ -83,10 +95,10 @@ function LoginPage() {
             </div>
             <span className="text-lg font-semibold">ShopOS</span>
           </div>
-          <h1 className="text-2xl font-semibold">Welcome back</h1>
+          <h1 className="text-2xl font-semibold">Sign in to ShopOS — AI Business Management</h1>
           <p className="mt-1 text-sm text-muted-foreground">Sign in to continue managing your shop.</p>
 
-          <Button variant="outline" className="mt-6 w-full h-11" onClick={onGoogle}>
+          <Button variant="outline" className="mt-6 w-full h-11" onClick={onGoogle} aria-label="Continue with Google">
             <GoogleIcon /> Continue with Google
           </Button>
 
@@ -106,7 +118,7 @@ function LoginPage() {
               </div>
               <Input id="p" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 h-11" />
             </div>
-            <Button type="submit" className="w-full h-11" disabled={loading}>
+            <Button type="submit" className="w-full h-11" disabled={loading} aria-label="Sign in">
               {loading ? "Signing in…" : "Sign in"}
             </Button>
           </form>

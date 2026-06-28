@@ -15,6 +15,18 @@ export const Route = createFileRoute("/register")({
     const { data } = await supabase.auth.getSession();
     if (data.session) throw redirect({ to: "/dashboard" });
   },
+  head: () => ({
+    meta: [
+      { title: "Create your account — ShopOS" },
+      { name: "description", content: "Start your 7-day free trial of ShopOS — GST invoicing, inventory, customers, and WhatsApp billing for small shops in India." },
+      { property: "og:title", content: "Create your account — ShopOS" },
+      { property: "og:description", content: "Start your 7-day free trial of ShopOS — GST invoicing, inventory, customers, and WhatsApp billing for small shops in India." },
+      { property: "og:url", content: "https://shopos.lovable.app/register" },
+      { name: "twitter:title", content: "Create your account — ShopOS" },
+      { name: "twitter:description", content: "Start your 7-day free trial of ShopOS — GST invoicing, inventory, customers, and WhatsApp billing for small shops in India." },
+    ],
+    links: [{ rel: "canonical", href: "https://shopos.lovable.app/register" }],
+  }),
   component: RegisterPage,
 });
 
@@ -99,7 +111,7 @@ function RegisterPage() {
           </div>
           <span className="text-lg font-semibold">ShopOS</span>
         </div>
-        <h1 className="text-2xl font-semibold">Create your account</h1>
+        <h1 className="text-2xl font-semibold">Create your ShopOS account — AI Business Management</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Start running your shop in minutes.
         </p>

@@ -7,7 +7,20 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/reset-password")({ component: ResetPage });
+export const Route = createFileRoute("/reset-password")({
+  head: () => ({
+    meta: [
+      { title: "Reset password — ShopOS" },
+      { name: "description", content: "Reset your ShopOS password and get back to managing invoices, inventory, and customers." },
+      { property: "og:title", content: "Reset password — ShopOS" },
+      { property: "og:description", content: "Reset your ShopOS password and get back to managing invoices, inventory, and customers." },
+      { property: "og:url", content: "https://shopos.lovable.app/reset-password" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://shopos.lovable.app/reset-password" }],
+  }),
+  component: ResetPage,
+});
 
 function ResetPage() {
   const [email, setEmail] = useState("");
