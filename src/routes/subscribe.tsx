@@ -33,7 +33,21 @@ import {
 } from "@/lib/subscription";
 import { useAuth } from "@/lib/auth";
 
-export const Route = createFileRoute("/subscribe")({ component: SubscribePage });
+export const Route = createFileRoute("/subscribe")({
+  head: () => ({
+    meta: [
+      { title: "Subscribe — ShopOS ₹499/month" },
+      { name: "description", content: "Activate your ShopOS subscription for ₹499/month via UPI. Unlimited invoices, inventory, customers, expenses, and WhatsApp billing." },
+      { property: "og:title", content: "Subscribe — ShopOS ₹499/month" },
+      { property: "og:description", content: "Activate your ShopOS subscription for ₹499/month via UPI. Unlimited invoices, inventory, customers, expenses, and WhatsApp billing." },
+      { property: "og:url", content: "https://shopos.lovable.app/subscribe" },
+      { name: "twitter:title", content: "Subscribe — ShopOS ₹499/month" },
+      { name: "twitter:description", content: "Activate your ShopOS subscription for ₹499/month via UPI. Unlimited invoices, inventory, customers, expenses, and WhatsApp billing." },
+    ],
+    links: [{ rel: "canonical", href: "https://shopos.lovable.app/subscribe" }],
+  }),
+  component: SubscribePage,
+});
 
 const FEATURES = [
   "Unlimited invoices & customers",
