@@ -1,0 +1,12 @@
+# ShopOS
+
+> AI-powered business management for small shops in India — GST invoicing, inventory, customers, expenses, and WhatsApp billing in one app.
+
+ShopOS helps shop owners run day-to-day operations: create GST-compliant invoices, track inventory and low-stock alerts, manage customer ledgers and partial payments, log expenses, and share bills over WhatsApp.
+
+## Pages
+
+- [Home](/): Product overview and sign-in entry point.
+- [Sign in](/login): Existing customers sign in with email or Google.
+- [Create account](/register): Start a free 7-day trial.
+- [Subscribe](/subscribe): Pricing and UPI activation flow for the ₹499/month plan.

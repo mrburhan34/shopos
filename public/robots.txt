@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /invoices
+Disallow: /customers
+Disallow: /products
+Disallow: /suppliers
+Disallow: /ledger
+Disallow: /expenses
+Disallow: /analytics
+Disallow: /ai
+Disallow: /whatsapp
+Disallow: /settings
+
+Sitemap: https://shopos.lovable.app/sitemap.xml
