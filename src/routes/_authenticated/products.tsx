@@ -1,3 +1,4 @@
+import { humanizeError } from "@/lib/errors";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -95,10 +96,10 @@ function ProductForm({ initial, onDone }: { initial?: any; onDone: () => void })
     const { data: u } = await supabase.auth.getUser();
     if (initial) {
       const { error } = await supabase.from("products").update(f).eq("id", initial.id);
-      if (error) return toast.error(error.message);
+      if (error) return toast.error(humanizeError(error));
     } else {
       const { error } = await supabase.from("products").insert({ ...f, user_id: u.user!.id });
-      if (error) return toast.error(error.message);
+      if (error) return toast.error(humanizeError(error));
     }
     toast.success("Saved");
     onDone();

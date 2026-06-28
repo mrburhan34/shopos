@@ -70,6 +70,9 @@ export const saveWhatsappConfig = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin
       .from("whatsapp_config")
       .upsert(payload, { onConflict: "user_id" });
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[whatsapp] save failed", error);
+      throw new Error("Could not save configuration. Please try again.");
+    }
     return { ok: true };
   });
